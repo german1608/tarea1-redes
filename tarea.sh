@@ -5,29 +5,46 @@ usage () {
   exit 1
 }
 
+pingdomain () {
+    ping -c1 $1 &> /dev/null 2> /dev/null
+}
+
+getDefaultInterface () {
+    route | egrep default | awk '{ print $8 }'
+}
+
+getGateway () {
+    ip route | egrep default | cut -d' ' -f 3
+}
+
+getExternalIp () {
+    ip addr show $(getDefaultInterface) | grep -Po 'inet \K[\d.]+'
+}
+
 if [ -z "$1" ]
 then
   usage
 fi
 
 while true
-    do 
-    ping -c 1 $1 2> /dev/null
+    do
+    pingdomain $1
     if [ $? == 0 ]
     then
         echo "url is up"
     else
-        gtway=$(ip route | egrep default | cut -d' ' -f 3)
+        gtway=$(getGateway)
         echo $gtway
-        ping -c 1 $gtway 2> /dev/null
+        pingdomain $gtway
         if [ $? == 0 ]
         then
             echo "gateway is up, url down"
         else
-            priv_ip=$(ip addr show wlan0 | grep -Po 'inet \K[\d.]+')
+            interface=$(getDefaultInterface)
+            priv_ip=$(getIxternalIp)
             echo $priv_ip
-            ping -c 1 $priv_ip 2> /dev/null
-            
+            pingdomain $priv_ip
+
             if [ $? == 0 ]
             then
                 echo "ip private is up, gateway is down"
