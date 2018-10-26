@@ -39,13 +39,14 @@ while true
     message=""
     # Hacemos ping al dominio para ver si esta up.
     pingdomain $url
+    ret=$?
     # El codigo de retorno 2 indica que el dominio
     # suministrado no fue resuelto por un dns. El problema puede ser
     # el dns del dominio
-    if [ $? = 2 ]; then
+    if [ ret = 2 ]; then
         message="La direccion ip de $url no fue resolvida"
     # Si es 1, es que el dominio no le dio respuesta.
-    elif [ $? = 1 ]; then
+    elif [ ret = 1 ]; then
         message="El dominio $url esta down"
         gtway=$(getGateway)
         # Si el gtway es "" es por que la computadora esta en una red
