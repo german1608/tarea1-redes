@@ -8,7 +8,7 @@ usage () {
 mailAdmin () {
     body=$1
     subject="Error en la red"
-    adminEmail="14-10924@usb.ve"
+    adminEmail=$(whoami)@$(hostname)
     echo body | mail -s $subject $adminEmail
 }
 
