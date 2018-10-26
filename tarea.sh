@@ -5,6 +5,13 @@ usage () {
   exit 1
 }
 
+mailAdmin () {
+    body=$1
+    subject="Error en la red"
+    adminEmail="14-10924@usb.ve"
+    echo body | mail -s $subject $adminEmail
+}
+
 pingdomain () {
     ping -c1 $1 &> /dev/null 2> /dev/null
 }
