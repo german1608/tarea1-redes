@@ -24,7 +24,7 @@ getGateway () {
     ip route | egrep default | cut -d' ' -f 3
 }
 
-getExternalIp () {
+getMachineIp () {
     ip addr show $(getDefaultInterface) | grep -Po 'inet \K[\d.]+'
 }
 
@@ -33,32 +33,51 @@ then
   usage
 fi
 
+url=$1
 while true
     do
-    pingdomain $1
-    if [ $? == 0 ]
+    message
+    # Hacemos ping al dominio para ver si esta up.
+    pingdomain $url
+    # El codigo de retorno 2 indica que el dominio
+    # suministrado no fue resolvido por un dns. El problema puede ser
+    # el dns del dominio
+    if [ $? == 2 ]
     then
-        echo "url is up"
-    else
+        message="La direccion ip de $url no fue resolvida"
+    # Si es 1, es que el dominio no le dio respuesta.
+    else if [ $? == 1 ]
+        message="El dominio $url esta down"
         gtway=$(getGateway)
-        echo $gtway
-        pingdomain $gtway
-        if [ $? == 0 ]
+        # Si el gtway es "" es por que la computadora esta en una red
+        if [ "$gtway" = "" ]
         then
-            echo "gateway is up, url down"
+            message="La red de la computadora local no tiene un gateway asignado"
+        # En otro caso, hacemos ping a ver si el gateway esta vivo
         else
-            interface=$(getDefaultInterface)
-            priv_ip=$(getIxternalIp)
-            echo $priv_ip
-            pingdomain $priv_ip
-
-            if [ $? == 0 ]
+            pingdomain $gtway
+            if [ $? != 0 ]
             then
-                echo "ip private is up, gateway is down"
-            else
-                echo "chao"
+                message="Hay un problema con el gateway de la red"
+                # Pudieramos ver si el problema es que no tenemos ip asignada
+                # Para ver eso, vemos la interfaz que se esta usando
+                interface=$(getDefaultInterface)
+                priv_ip=$(getMachineIp)
+                if []
+                pingdomain $priv_ip
+
+                if [ $? == 0 ]
+                then
+                    echo "ip private is up, gateway is down"
+                else
+                    echo "chao"
+                fi
             fi
         fi
+    fi
+    if [ "$message" != "" ]
+    then
+        mailAdmin $message
     fi
     sleep 5
 done
