@@ -79,6 +79,6 @@ while true
     then
         mailAdmin $message
     fi
-    sleep 5
+    sleep 60
 done
 
